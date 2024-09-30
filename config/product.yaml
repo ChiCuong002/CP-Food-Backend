@@ -1,0 +1,16 @@
+server:
+  port: ""
+  mode: ""
+logger:
+  log_level: debug
+  file_log_name: ""
+  max_size: 
+  max_backups: 
+  max_age: 
+  compress: true
+postgresql:
+  host: ""
+  port: ""
+  user: ""
+  password: ""
+  dbname: ""
