@@ -1,14 +1,16 @@
 package initialize
 
-import "fmt"
-
-import "food-recipes-backend/global"
+import (
+	"fmt"
+	"food-recipes-backend/global"
+	"food-recipes-backend/internal/routers"
+)
 
 func Run() {
 	LoadConfig()
 	InitLogger()
 	InitDatabase()
-	r := Initialize()
+	r := routers.InitializeRoutes()
 	port := global.Config.Server.Port
 	fmt.Println("port " + port)
 	r.Run(fmt.Sprintf(":%s", port))

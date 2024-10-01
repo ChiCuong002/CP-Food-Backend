@@ -1,9 +1,14 @@
 package initialize
 
-import "github.com/gin-gonic/gin"
+import (
+	//"food-recipes-backend/internal/wire"
+
+	"github.com/gin-gonic/gin"
+)
 
 func Initialize() *gin.Engine {
 	r := gin.Default()
+	//userController, _ := wire.InitUserRouterHandler()
 	// use middleware
 	v1 := r.Group("/v1/api")
 	{
@@ -12,6 +17,7 @@ func Initialize() *gin.Engine {
 				"message": "pong",
 			})
 		})
+
 	}
 	return r
 }
