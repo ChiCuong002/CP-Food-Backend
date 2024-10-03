@@ -11,3 +11,7 @@ var (
 	Logger *logger.ZapLogger
 	Db    *sql.DB
 )
+
+func ProvideDB() *sql.DB {
+    return Db
+}

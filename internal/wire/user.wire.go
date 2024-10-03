@@ -2,6 +2,7 @@
 package wire
 
 import (
+	"food-recipes-backend/global"
 	"food-recipes-backend/internal/controller"
 	"food-recipes-backend/internal/repo"
 	"food-recipes-backend/internal/services"
@@ -9,8 +10,10 @@ import (
 	"github.com/google/wire"
 )
 
-func InitUserRouterHandlerWithWire() (*controller.UserController, error) {
+func initUserRouterHandler() (*controller.UserController, error) {
 	wire.Build(
+		global.ProvideDB,
+		repo.NewKeyRepository,
 		repo.NewUserRepository,
 		services.NewUserService,
 		controller.NewUserController,

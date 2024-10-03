@@ -1,20 +1,32 @@
 package user
 
-import "github.com/gin-gonic/gin"
+import (
+	"food-recipes-backend/internal/middlewares"
+	"food-recipes-backend/internal/wire"
+
+	"github.com/gin-gonic/gin"
+)
 
 type UserRouter struct{}
 
 func (ur *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
+	//user controller
+	userController, _ := wire.InitUserRouterHandler()
 	//public router
 	userPublicRouter := Router.Group("/user")
 	{
-		userPublicRouter.POST("/register")
-		userPublicRouter.POST("/login")
+		userPublicRouter.POST("/register", userController.Register)
+		userPublicRouter.POST("/login", userController.Login)
 		userPublicRouter.POST("/logout")
 	}
 	//private router
 	userPrivateRouter := Router.Group("/user")
 	{
-		userPrivateRouter.GET("profile")
+		userPrivateRouter.Use(middlewares.TokenAuthMiddleware())	
+		userPrivateRouter.GET("/ping", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"message": "pong",
+			})
+		})
 	}
 }

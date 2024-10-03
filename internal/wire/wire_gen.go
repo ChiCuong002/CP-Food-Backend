@@ -7,6 +7,7 @@
 package wire
 
 import (
+	"food-recipes-backend/global"
 	"food-recipes-backend/internal/controller"
 	"food-recipes-backend/internal/repo"
 	"food-recipes-backend/internal/services"
@@ -15,8 +16,10 @@ import (
 // Injectors from user.wire.go:
 
 func InitUserRouterHandler() (*controller.UserController, error) {
-	iUserRepository := repo.NewUserRepository()
-	iUserService := services.NewUserService(iUserRepository)
+	db := global.ProvideDB()
+	iUserRepository := repo.NewUserRepository(db)
+	iKeyRepository := repo.NewKeyRepository(db)
+	iUserService := services.NewUserService(iUserRepository, iKeyRepository)
 	userController := controller.NewUserController(iUserService)
 	return userController, nil
 }

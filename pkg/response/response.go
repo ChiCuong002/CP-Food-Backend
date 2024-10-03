@@ -22,10 +22,10 @@ func SuccessResponse(c *gin.Context, code int, data interface{}) {
 }
 
 // error response
-func ErrorResponse(c *gin.Context, code int) {
+func ErrorResponse(c *gin.Context, code int, errorMessage string) {
 	c.JSON(http.StatusBadRequest, ResponseData{
 		Code:    code,
-		Message: message[code],
+		Message: errorMessage,
 		Data:    nil,
 	})
 }

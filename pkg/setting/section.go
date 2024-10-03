@@ -9,6 +9,7 @@ type Config struct {
 type ServerSetting struct {
 	Port string `mapstructure:"port"`
 	Mode string `mapstructure:"mode"`
+	SecretKey string `mapstructure:"secret_key"`
 }
 
 type LoggerSetting struct {
