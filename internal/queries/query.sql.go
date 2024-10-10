@@ -66,6 +66,56 @@ func (q *Queries) GetUserObjectByEmail(ctx context.Context, email string) (User,
 	return i, err
 }
 
+const getUserTokenById = `-- name: GetUserTokenById :one
+SELECT us.id, name, email, password, status, role_id, created_at, k.id, user_id, refresh_token, used_refresh_token 
+FROM users us, keys k
+WHERE us.id = k.user_id 
+AND us.id = $1
+`
+
+type GetUserTokenByIdRow struct {
+	ID               int32
+	Name             string
+	Email            string
+	Password         string
+	Status           NullUserStatus
+	RoleID           sql.NullInt32
+	CreatedAt        sql.NullTime
+	ID_2             int32
+	UserID           int32
+	RefreshToken     sql.NullString
+	UsedRefreshToken []string
+}
+
+func (q *Queries) GetUserTokenById(ctx context.Context, id int32) (GetUserTokenByIdRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserTokenById, id)
+	var i GetUserTokenByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+		&i.Status,
+		&i.RoleID,
+		&i.CreatedAt,
+		&i.ID_2,
+		&i.UserID,
+		&i.RefreshToken,
+		pq.Array(&i.UsedRefreshToken),
+	)
+	return i, err
+}
+
+const removeRefreshToken = `-- name: RemoveRefreshToken :exec
+DELETE FROM keys 
+WHERE user_id = $1
+`
+
+func (q *Queries) RemoveRefreshToken(ctx context.Context, userID int32) error {
+	_, err := q.db.ExecContext(ctx, removeRefreshToken, userID)
+	return err
+}
+
 const upsertRefreshToken = `-- name: UpsertRefreshToken :one
 INSERT INTO keys (user_id, refresh_token) VALUES ($1, $2) 
 ON CONFLICT (user_id) 

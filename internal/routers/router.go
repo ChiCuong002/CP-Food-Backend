@@ -2,7 +2,9 @@ package routers
 
 import (
 	"food-recipes-backend/global"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,9 +19,14 @@ func InitializeRoutes() *gin.Engine {
 		r = gin.New()
 	}
 	// middleware
-	// r.Use() // logger
-	// r.Use() // cors	
-	// r.Use() // limit request
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins:     true,
+		AllowMethods:     []string{"PUT", "PATCH", "GET", "POST"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge: 12 * time.Hour,
+	}))
 
 	// routers
 	userRouter := RouterGroupApp.User

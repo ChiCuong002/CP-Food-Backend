@@ -13,4 +13,14 @@ ON CONFLICT (user_id)
 DO UPDATE 
 SET refresh_token = EXCLUDED.refresh_token, 
 used_refresh_token = ARRAY_APPEND(keys.used_refresh_token, keys.refresh_token)
-RETURNING *;    
+RETURNING *;   
+
+-- name: RemoveRefreshToken :exec
+DELETE FROM keys 
+WHERE user_id = $1;
+
+-- name: GetUserTokenById :one
+SELECT * 
+FROM users us, keys k
+WHERE us.id = k.user_id 
+AND us.id = $1;

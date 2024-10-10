@@ -8,6 +8,7 @@ import (
 
 type IKeyRepository interface {
 	UpsertKey(ctx context.Context, upsertParams queries.UpsertRefreshTokenParams) (queries.Key, error)
+	RemoveRefreshToken(ctx context.Context, userID int) error
 }
 
 type keyRepository struct {
@@ -18,6 +19,14 @@ func NewKeyRepository(db *sql.DB) IKeyRepository {
 	return &keyRepository{
 		queries: queries.New(db),
 	}
+}
+
+func (kr *keyRepository) RemoveRefreshToken(ctx context.Context, userID int) error {
+	err := kr.queries.RemoveRefreshToken(ctx, int32(userID))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (kr *keyRepository) UpsertKey(ctx context.Context, upsertParams queries.UpsertRefreshTokenParams) (queries.Key, error) {

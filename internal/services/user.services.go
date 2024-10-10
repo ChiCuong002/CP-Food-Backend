@@ -8,12 +8,15 @@ import (
 	"food-recipes-backend/internal/repo"
 	"food-recipes-backend/internal/vo"
 	"food-recipes-backend/pkg/auth"
+	apierror "food-recipes-backend/pkg/errors"
 	"food-recipes-backend/pkg/hash"
 )
 
 type IUserService interface {
 	Register(ctx context.Context, name string, email string, password string) (*vo.UserRegisterResponse, error)
 	Login(ctx context.Context, email string, password string) (*vo.UserLoginResponse, error)
+	Logout(ctx context.Context, userID int) error
+	RefreshToken(ctx context.Context, userID int, refreshToken string) (*vo.UserLoginResponse, error)
 }
 
 type userService struct {
@@ -36,21 +39,21 @@ func (us *userService) Register(ctx context.Context, name, email, password strin
 	fmt.Printf(`service: %s, %s, %s\n`, name, email, password)
 	foundUser, _ := us.userRepo.GetUserByEmail(ctx, email)
 	if foundUser != "" {
-		return nil, fmt.Errorf("user already exists")
+		return nil, apierror.NewAPIError(400, "email already exists")
 	}
 	// hash password
 	hashedPassword, err := hash.HashPassword(password)
 	if err != nil {
-		return nil, fmt.Errorf("failed to hash password")
+		return nil, apierror.NewCustomError(500, "failed to hash password")
 	}
 	// insert user
 	user, err := us.userRepo.CreateUser(ctx, name, email, hashedPassword)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create user")
+		return nil, apierror.NewCustomError(500, "failed to create user")
 	}
 	accessToken, refreshToken, err := createTokens(int(user.ID))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create tokens")
+		return nil, apierror.NewCustomError(500, "failed to create tokens")
 	}
 	// insert token
 	_, err = us.keyRepo.UpsertKey(ctx, queries.UpsertRefreshTokenParams{
@@ -58,8 +61,7 @@ func (us *userService) Register(ctx context.Context, name, email, password strin
 		RefreshToken: sql.NullString{String: refreshToken, Valid: true},
 	})
 	if err != nil {
-		fmt.Println("failed to insert token: ", err.Error())
-		return nil, fmt.Errorf("failed to insert token")
+		return nil, apierror.NewCustomError(500, "failed to insert token")
 	}
 	result := &vo.UserRegisterResponse{
 		Name:  user.Name,
@@ -75,20 +77,20 @@ func (us *userService) Register(ctx context.Context, name, email, password strin
 func (us *userService) Login(ctx context.Context, email, password string) (*vo.UserLoginResponse, error) {
 	foundUser := us.userRepo.GetUserObjByEmail(ctx, email)
 	if foundUser == nil {
-		return nil, fmt.Errorf("email or password is incorrect")
+		return nil, apierror.NewAPIError(400, "email or password is incorrect")
 	}
 	err := hash.VerifyPassword(foundUser.Password, password)
 	if err != nil {
-		return nil, fmt.Errorf("email or password is incorrect")
+		return nil, apierror.NewAPIError(400, "email or password is incorrect")
 	}
 	accessToken, refreshToken, err := createTokens(int(foundUser.ID))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create tokens")
+		return nil, apierror.NewCustomError(500, "failed to create tokens")
 	}
 	// update refresh token
 	err = us.upsertRefreshToken(ctx, int(foundUser.ID), refreshToken)
 	if err != nil {
-		return nil, fmt.Errorf("failed to insert token")
+		return nil, apierror.NewCustomError(500, "failed to insert token")
 	}
 	result := &vo.UserLoginResponse{
 		ID:   int(foundUser.ID),
@@ -99,6 +101,56 @@ func (us *userService) Login(ctx context.Context, email, password string) (*vo.U
 		},
 	}
 	return result, nil
+}
+
+func (us *userService) Logout(ctx context.Context, userID int) error {
+	err := us.keyRepo.RemoveRefreshToken(ctx, userID)
+	if err != nil {
+		return apierror.NewCustomError(500, "failed to delete refresh token")
+	}
+	return nil
+}
+
+func (us *userService) RefreshToken(ctx context.Context, userID int, refreshToken string) (*vo.UserLoginResponse, error) {
+	user, err := us.userRepo.GetUserTokenById(ctx, userID)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, apierror.NewCustomError(500, "failed to get user token")
+	}
+	usedRefreshToken := user.UsedRefreshToken
+	if contains(usedRefreshToken, refreshToken) {
+		return nil, apierror.NewAPIError(400, "Something wrong happend !! Pls login again")
+	}
+	if user.RefreshToken.String != refreshToken {
+		return nil, apierror.NewAPIError(400, "Authen error")
+	}
+	accessToken, refreshToken, err := createTokens(int(user.ID))
+	if err != nil {
+		return nil, apierror.NewCustomError(500, "failed to create tokens")
+	}
+	// update refresh token
+	err = us.upsertRefreshToken(ctx, int(user.ID), refreshToken)
+	if err != nil {
+		return nil, apierror.NewCustomError(500, "failed to insert token")
+	}
+	result := &vo.UserLoginResponse{
+		ID:   int(user.ID),
+		Name: user.Name,
+		Tokens: vo.TokensResponse{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		},
+	}
+	return result, nil
+}
+
+func contains(s []string, str string) bool {
+	for i := len(s) - 1; i >= 0; i-- {
+		if s[i] == str {
+			return true
+		}
+	}
+	return false
 }
 
 // generate tokens

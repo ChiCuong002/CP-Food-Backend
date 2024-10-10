@@ -1,17 +1,14 @@
 package initialize
 
 import (
-	"fmt"
-	"food-recipes-backend/global"
 	"food-recipes-backend/internal/routers"
+	"github.com/gin-gonic/gin"
 )
 
-func Run() {
+func Run() *gin.Engine {
 	LoadConfig()
 	InitLogger()
 	InitDatabase()
 	r := routers.InitializeRoutes()
-	port := global.Config.Server.Port
-	fmt.Println("port " + port)
-	r.Run(fmt.Sprintf(":%s", port))
+	return r
 }

@@ -8,24 +8,14 @@ import (
 
 type ResponseData struct {
 	Code    int         `json:"code"`
-	Message string      `json:"message"`
+	Message string      `json:"msg"`
 	Data    interface{} `json:"data"`
 }
-
 // success response
 func SuccessResponse(c *gin.Context, code int, data interface{}) {
 	c.JSON(http.StatusOK, ResponseData{
 		Code:    code,
 		Message: message[code],
 		Data:    data,
-	})
-}
-
-// error response
-func ErrorResponse(c *gin.Context, code int, errorMessage string) {
-	c.JSON(http.StatusBadRequest, ResponseData{
-		Code:    code,
-		Message: errorMessage,
-		Data:    nil,
 	})
 }

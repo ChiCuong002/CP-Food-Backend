@@ -1,0 +1,209 @@
+basePath: /v1/api
+definitions:
+  apierror.APIError:
+    properties:
+      code:
+        type: integer
+      msg:
+        type: string
+    type: object
+  response.ResponseData:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  vo.TokensResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  vo.UserLoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  vo.UserRegisterResponse:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      tokens:
+        $ref: '#/definitions/vo.TokensResponse'
+    type: object
+  vo.UserRegistrationRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: buichicuong6110@gmail.com
+    name: Bui Chi Cuong
+    url: https://github.com/ChiCuong002/CP-Food-Backend
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://github.com/ChiCuong002/CP-Food-Backend
+  title: API Food Recipes
+  version: 1.0.0
+paths:
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: After registration, user can login, receive access token and refresh
+        token
+      parameters:
+      - description: User login request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/vo.UserLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.UserRegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: User Login
+      tags:
+      - accounts management
+  /user/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user, remove refresh token from database
+      parameters:
+      - description: Client ID
+        in: header
+        name: X-Client-Id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      security:
+      - BearerAuth: []
+      summary: User Logout
+      tags:
+      - accounts management
+  /user/refresh-token:
+    post:
+      consumes:
+      - application/json
+      description: Refresh user token, return new access token and refresh token
+      parameters:
+      - description: Client ID
+        in: header
+        name: X-Client-Id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      security:
+      - BearerAuth: []
+      summary: User Refresh Token
+      tags:
+      - accounts management
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user
+      parameters:
+      - description: User registration request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/vo.UserRegistrationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/vo.UserRegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      summary: User Registration
+      tags:
+      - accounts management
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
