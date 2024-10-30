@@ -12,6 +12,8 @@ type IUserRepository interface {
 	CreateUser(ctx context.Context, name string, email string, password string) (queries.User,error)
 	GetUserObjByEmail(ctx context.Context, email string) *queries.User
 	GetUserTokenById(ctx context.Context, id int) (queries.GetUserTokenByIdRow, error)
+	ListUsers(ctx context.Context, params queries.ListUsersParams) ([]queries.ListUsersRow, error)
+	GetUserByID(ctx context.Context, id int32) (queries.DetailUserRow, error)
 }
 
 type userRepository struct {
@@ -56,4 +58,18 @@ func (us *userRepository) GetUserTokenById(ctx context.Context, id int) (queries
 		return queries.GetUserTokenByIdRow{}, err
 	}
 	return token, nil
+}
+func (us *userRepository) ListUsers(ctx context.Context, params queries.ListUsersParams) ([]queries.ListUsersRow, error) {
+	users, err := us.queries.ListUsers(ctx, params)
+	if err != nil {
+		return []queries.ListUsersRow{}, err
+	}
+	return users, nil
+}
+func (us *userRepository) GetUserByID(ctx context.Context, id int32) (queries.DetailUserRow, error) {
+	user, err := us.queries.DetailUser(ctx, id)
+	if err != nil {
+		return queries.DetailUserRow{}, err
+	}
+	return user, nil
 }

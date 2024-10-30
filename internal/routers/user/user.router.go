@@ -18,18 +18,17 @@ func (ur *UserRouter) InitUserRouter(Router *gin.RouterGroup) {
 	{
 		userPublicRouter.POST("/register", apierror.Make(userController.Register))
 		userPublicRouter.POST("/login", apierror.Make(userController.Login))
-		
 	}
 	// private router
-    userPrivateRouter := Router.Group("/user")
-    {
-        userPrivateRouter.Use(middlewares.AuthMiddleware())
-        userPrivateRouter.POST("/logout", apierror.Make(userController.Logout))
+	userPrivateRouter := Router.Group("/user")
+	{
+		userPrivateRouter.Use(middlewares.AuthMiddleware())
+		userPrivateRouter.POST("/logout", apierror.Make(userController.Logout))
 		userPrivateRouter.POST("/refresh-token", apierror.Make(userController.RefreshToken))
-        userPrivateRouter.GET("/ping", func(c *gin.Context) {
-            c.JSON(200, gin.H{
-                "message": "pong",
-            })
-        })
-    }
+		userPrivateRouter.GET("/ping", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"message": "pong",
+			})
+		})
+	}
 }

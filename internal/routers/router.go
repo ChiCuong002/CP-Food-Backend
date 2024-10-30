@@ -2,6 +2,7 @@ package routers
 
 import (
 	"food-recipes-backend/global"
+	"food-recipes-backend/internal/middlewares"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -27,12 +28,15 @@ func InitializeRoutes() *gin.Engine {
 		AllowCredentials: true,
 		MaxAge: 12 * time.Hour,
 	}))
+	r.Use(middlewares.RateLimitMiddleware())
 
 	// routers
 	userRouter := RouterGroupApp.User
+	adminRouter := RouterGroupApp.Admin
 	MainGroup := r.Group("/v1/api")
 	{
 		userRouter.InitUserRouter(MainGroup)
+		adminRouter.InitAdminRouter(MainGroup)
 	}
 	return r
 }

@@ -9,6 +9,7 @@ func Run() *gin.Engine {
 	LoadConfig()
 	InitLogger()
 	InitDatabase()
+	InitRedis()
 	r := routers.InitializeRoutes()
 	return r
 }

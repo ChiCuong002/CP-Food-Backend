@@ -13,6 +13,18 @@ import (
 	"food-recipes-backend/internal/services"
 )
 
+// Injectors from admin.wire.go:
+
+func InitAdminRouterHandler() (*controller.AdminController, error) {
+	db := global.ProvideDB()
+	iUserRepository := repo.NewUserRepository(db)
+	iKeyRepository := repo.NewKeyRepository(db)
+	iUserService := services.NewUserService(iUserRepository, iKeyRepository)
+	client := global.ProvideRedis()
+	adminController := controller.NewAdminController(iUserService, client)
+	return adminController, nil
+}
+
 // Injectors from user.wire.go:
 
 func InitUserRouterHandler() (*controller.UserController, error) {

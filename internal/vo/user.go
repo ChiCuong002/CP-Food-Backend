@@ -12,6 +12,13 @@ type UserLoginRequest struct {
 
 
 // response
+type UserResponse struct {
+	ID         int32          `json:"id"`
+	Name       string         `json:"name"`
+	Email      string         `json:"email"`
+	Status     interface{} `json:"status"`
+}
+
 type UserRegisterResponse struct {
 	Name string `json:"name"`
 	Email string `json:"email"`
@@ -25,4 +32,11 @@ type UserLoginResponse struct {
 	ID int `json:"id"`
 	Name string `json:"name"`
 	Tokens TokensResponse `json:"tokens"`
+}
+type ListUsersResponse struct {
+	Limit int `json:"limit"`
+	Page int `json:"page"`
+	TotalRows int `json:"total_rows"`
+	TotalPages int `json:"total_pages"`
+	Rows interface{} `json:"rows"`
 }

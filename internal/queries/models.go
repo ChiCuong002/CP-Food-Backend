@@ -30,8 +30,8 @@ func (e *UserStatus) Scan(src interface{}) error {
 }
 
 type NullUserStatus struct {
-	UserStatus UserStatus
-	Valid      bool // Valid is true if UserStatus is not NULL
+	UserStatus UserStatus `json:"user_status"`
+	Valid      bool       `json:"valid"` // Valid is true if UserStatus is not NULL
 }
 
 // Scan implements the Scanner interface.
@@ -53,23 +53,18 @@ func (ns NullUserStatus) Value() (driver.Value, error) {
 }
 
 type Key struct {
-	ID               int32
-	UserID           int32
-	RefreshToken     sql.NullString
-	UsedRefreshToken []string
-}
-
-type Role struct {
-	ID   int32
-	Name string
+	ID               int32          `json:"id"`
+	UserID           int32          `json:"user_id"`
+	RefreshToken     sql.NullString `json:"refresh_token"`
+	UsedRefreshToken []string       `json:"used_refresh_token"`
 }
 
 type User struct {
-	ID        int32
-	Name      string
-	Email     string
-	Password  string
-	Status    NullUserStatus
-	RoleID    sql.NullInt32
-	CreatedAt sql.NullTime
+	ID        int32          `json:"id"`
+	Name      string         `json:"name"`
+	Email     string         `json:"email"`
+	Password  string         `json:"password"`
+	Status    NullUserStatus `json:"status"`
+	RoleID    sql.NullInt32  `json:"role_id"`
+	CreatedAt sql.NullTime   `json:"created_at"`
 }

@@ -17,9 +17,9 @@ INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name
 `
 
 type CreateUserParams struct {
-	Name     string
-	Email    string
-	Password string
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -33,6 +33,32 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Status,
 		&i.RoleID,
 		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const detailUser = `-- name: DetailUser :one
+SELECT users.id, users.name, email, roles.name as role
+FROM users, roles
+WHERE users.role_id = roles.id
+AND users.id = $1
+`
+
+type DetailUserRow struct {
+	ID    int32  `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+}
+
+func (q *Queries) DetailUser(ctx context.Context, id int32) (DetailUserRow, error) {
+	row := q.db.QueryRowContext(ctx, detailUser, id)
+	var i DetailUserRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Role,
 	)
 	return i, err
 }
@@ -74,17 +100,17 @@ AND us.id = $1
 `
 
 type GetUserTokenByIdRow struct {
-	ID               int32
-	Name             string
-	Email            string
-	Password         string
-	Status           NullUserStatus
-	RoleID           sql.NullInt32
-	CreatedAt        sql.NullTime
-	ID_2             int32
-	UserID           int32
-	RefreshToken     sql.NullString
-	UsedRefreshToken []string
+	ID               int32          `json:"id"`
+	Name             string         `json:"name"`
+	Email            string         `json:"email"`
+	Password         string         `json:"password"`
+	Status           NullUserStatus `json:"status"`
+	RoleID           sql.NullInt32  `json:"role_id"`
+	CreatedAt        sql.NullTime   `json:"created_at"`
+	ID_2             int32          `json:"id_2"`
+	UserID           int32          `json:"user_id"`
+	RefreshToken     sql.NullString `json:"refresh_token"`
+	UsedRefreshToken []string       `json:"used_refresh_token"`
 }
 
 func (q *Queries) GetUserTokenById(ctx context.Context, id int32) (GetUserTokenByIdRow, error) {
@@ -104,6 +130,80 @@ func (q *Queries) GetUserTokenById(ctx context.Context, id int32) (GetUserTokenB
 		pq.Array(&i.UsedRefreshToken),
 	)
 	return i, err
+}
+
+const listUsers = `-- name: ListUsers :many
+WITH total_count AS (
+  SELECT COUNT(*) AS count
+  FROM users
+  WHERE 
+    ($3::text IS NULL OR name ILIKE '%' || $3 || '%') AND
+    ($4::text IS NULL OR status::text ILIKE '%' || $4 || '%')
+)
+SELECT 
+  id, name, email, status, created_at, total_count.count AS total_count
+FROM 
+  users, total_count
+WHERE 
+  ($3::text IS NULL OR name ILIKE '%' || $3 || '%') AND
+  ($4::text IS NULL OR status::text ILIKE '%' || $4 || '%')
+ORDER BY
+  CASE WHEN $5 = 'iddesc' THEN id END DESC,
+  CASE WHEN $5 = 'idasc' THEN id END ASC
+LIMIT $1 OFFSET $2
+`
+
+type ListUsersParams struct {
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
+	Search string      `json:"search"`
+	Status string      `json:"status"`
+	Sort   interface{} `json:"sort"`
+}
+
+type ListUsersRow struct {
+	ID         int32          `json:"id"`
+	Name       string         `json:"name"`
+	Email      string         `json:"email"`
+	Status     NullUserStatus `json:"status"`
+	CreatedAt  sql.NullTime   `json:"created_at"`
+	TotalCount int64          `json:"total_count"`
+}
+
+func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUsers,
+		arg.Limit,
+		arg.Offset,
+		arg.Search,
+		arg.Status,
+		arg.Sort,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUsersRow
+	for rows.Next() {
+		var i ListUsersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Email,
+			&i.Status,
+			&i.CreatedAt,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const removeRefreshToken = `-- name: RemoveRefreshToken :exec
@@ -126,8 +226,8 @@ RETURNING id, user_id, refresh_token, used_refresh_token
 `
 
 type UpsertRefreshTokenParams struct {
-	UserID       int32
-	RefreshToken sql.NullString
+	UserID       int32          `json:"user_id"`
+	RefreshToken sql.NullString `json:"refresh_token"`
 }
 
 func (q *Queries) UpsertRefreshToken(ctx context.Context, arg UpsertRefreshTokenParams) (Key, error) {

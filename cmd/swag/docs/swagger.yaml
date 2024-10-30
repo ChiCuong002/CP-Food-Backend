@@ -68,6 +68,97 @@ info:
   title: API Food Recipes
   version: 1.0.0
 paths:
+  /admin/user/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Detail infomation of a user
+      parameters:
+      - description: Client ID
+        in: header
+        name: X-Client-Id
+        required: true
+        type: string
+      - description: user ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      security:
+      - BearerAuth: []
+      summary: Detail User
+      tags:
+      - users management
+  /admin/users:
+    get:
+      consumes:
+      - application/json
+      description: Get list of all users
+      parameters:
+      - description: Client ID
+        in: header
+        name: X-Client-Id
+        required: true
+        type: string
+      - description: Search by name
+        in: query
+        name: search
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Sort by id
+        in: query
+        name: sort
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseData'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/apierror.APIError'
+      security:
+      - BearerAuth: []
+      summary: List users
+      tags:
+      - users management
   /user/login:
     post:
       consumes:

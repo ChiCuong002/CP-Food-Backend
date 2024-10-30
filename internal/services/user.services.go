@@ -17,6 +17,8 @@ type IUserService interface {
 	Login(ctx context.Context, email string, password string) (*vo.UserLoginResponse, error)
 	Logout(ctx context.Context, userID int) error
 	RefreshToken(ctx context.Context, userID int, refreshToken string) (*vo.UserLoginResponse, error)
+	ListUser(ctx context.Context, params queries.ListUsersParams) ([]queries.ListUsersRow, error)
+	GetUserByID(ctx context.Context, id int32) (*queries.DetailUserRow, error)
 }
 
 type userService struct {
@@ -34,6 +36,21 @@ func NewUserService(
 		keyRepo:  keyRepo,
 	}
 }
+func (us *userService) GetUserByID(ctx context.Context, id int32) (*queries.DetailUserRow, error) {
+	user, err := us.userRepo.GetUserByID(ctx, id)
+	if err != nil {
+		return nil, apierror.NewCustomError(500, "failed to get user")
+	}
+	return &user, nil
+}
+func (us *userService) ListUser(ctx context.Context, params queries.ListUsersParams) ([]queries.ListUsersRow, error) {
+	users, err := us.userRepo.ListUsers(ctx, params)
+	if err != nil {
+		return nil, apierror.NewCustomError(500, "failed to get users")
+	}
+	return users, nil
+}
+
 
 func (us *userService) Register(ctx context.Context, name, email, password string) (*vo.UserRegisterResponse, error) {
 	fmt.Printf(`service: %s, %s, %s\n`, name, email, password)
