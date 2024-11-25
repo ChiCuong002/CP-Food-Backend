@@ -21,3 +21,13 @@ CREATE TABLE keys (
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT unique_user_id UNIQUE (user_id)
 );
+CREATE TABLE recipes (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    recipe_des TEXT,
+    image_url VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_user_recipes FOREIGN KEY (user_id) REFERENCES users(id)
+);
